@@ -1,0 +1,11 @@
+# wordcount-cli has NO runtime dependencies: it is standard-library Python only.
+#
+# The single entry below is the optional dev-only test runner. The suite itself
+# is written with stdlib unittest, so it also runs with no packages installed:
+#
+#     python3 -m unittest discover -s tests -v
+#
+# The range is deliberate rather than an exact pin: it keeps whatever recent,
+# released pytest the interpreter already has (and picks a version that supports
+# older Pythons on an older machine) instead of downgrading a working install.
+pytest>=8.3,<10
