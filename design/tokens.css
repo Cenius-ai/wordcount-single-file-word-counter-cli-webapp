@@ -1,0 +1,274 @@
+/* wordcount-cli — committed design source of truth.
+ *
+ * The product's interface is a terminal, so there is no page to style: this file
+ * is where the build's design direction is committed, and it is the token set any
+ * future surface of this product (docs, a wrapper, a companion viewer) must
+ * consume instead of hard-coding values. Nothing here is required to run
+ * `python3 wordcount.py FILE`.
+ *
+ * Design DNA — Swiss / International Minimal, PRODUCT register.
+ *   variance 3/10 · motion 1/10 · density 5/10
+ *   Grid-first, oversized H1 with tight tracking, massive whitespace,
+ *   flush-left rag-right text. Zero decoration: no shadows, no gradients,
+ *   1px hairlines separate sections. ONE accent, used only for interactive
+ *   elements. border-radius 0. Asymmetric 2fr/1fr columns.
+ *   Motion is deliberately static: no entrance animation, only functional
+ *   state feedback at <=120ms.
+ *   Signature: oversized ghost section numerals (01, 02, ...) at 6-8rem,
+ *   6% ink opacity, behind each section heading.
+ */
+
+/* Committed type pairing, loaded as specified. The system-font fallbacks after
+ * each family keep text rendering (and metrics usable) with no network, so no
+ * surface may ever depend on the remote font being reachable. */
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;700&family=Inter:wght@400;500;700&display=swap');
+
+:root {
+  /* ---- Committed palette (verbatim) ---------------------------------- */
+  --background: #f5fbfe;
+  --foreground: #0a1418;
+  --card: #fdffff;
+  --card-foreground: #0a1418;
+  --muted: #e7eef0;
+  --muted-foreground: #5a666a;
+  --border: #d9dfe2;
+  --primary: #00b3cb;
+  --on-primary: #111111;
+  --secondary: #e7eef0;
+  --on-secondary: #0a1418;
+  --accent: #00b3cb;
+  --on-accent: #111111;
+  --ring: #00b3cb;
+  --destructive: #c9302d;
+  --on-destructive: #ffffff;
+
+  /* Accent as oklch for CSS ramps; the hex twin above is the value to hand to
+   * any non-CSS consumer (canvas, charts, native theming) — never the oklch. */
+  --accent-oklch: oklch(0.70 0.12 212);
+
+  /* ---- Committed type ------------------------------------------------- */
+  --font-heading: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+
+  /* ---- Structure ------------------------------------------------------ */
+  --radius: 0;
+  --hairline: 1px solid var(--border);
+  --grid-columns: 12;
+  --measure: 65ch;
+
+  /* ONE spacing scale, on a 4px rhythm. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Type ramp: 2-3 sizes per screen, tight tracking on the display size. */
+  --text-display: clamp(2.5rem, 6vw, 4.5rem);
+  --text-display-tracking: -0.02em;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --leading-body: 1.5;
+
+  /* Signature: ghost section numerals behind each section heading. */
+  --ghost-numeral-size: clamp(6rem, 8vw, 8rem);
+  --ghost-numeral-ink: color-mix(in srgb, var(--foreground) 6%, transparent);
+
+  /* Motion: stillness is the signature. Feedback only, and short. */
+  --transition: 120ms ease-out;
+}
+
+/* ---- Base ------------------------------------------------------------- */
+
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin: 0 0 var(--space-4);
+  max-width: var(--measure);
+}
+
+h1 {
+  font-size: var(--text-display);
+  letter-spacing: var(--text-display-tracking);
+}
+
+code,
+pre,
+.output {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ---- Signature: ghost section numerals -------------------------------- */
+
+.section {
+  position: relative;
+  border-top: var(--hairline);
+  padding: var(--space-12) 0;
+}
+
+.section-number {
+  position: absolute;
+  top: var(--space-4);
+  right: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--ghost-numeral-size);
+  line-height: 1;
+  color: var(--ghost-numeral-ink);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---- Asymmetric grid, flush-left rag-right ---------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 60rem) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Interactive elements: the ONLY place the accent appears ---------- */
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color var(--transition), background-color var(--transition);
+}
+
+a:hover,
+a:active {
+  color: var(--foreground);
+}
+
+button {
+  font: inherit;
+  font-family: var(--font-body);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--on-secondary);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background-color var(--transition), border-color var(--transition),
+    transform var(--transition);
+}
+
+button:hover:not(:disabled) {
+  background: var(--muted);
+  border-color: var(--accent);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: 1rem; /* never below 16px: iOS zooms smaller fields */
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--card-foreground);
+  padding: var(--space-3);
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.error {
+  color: var(--destructive);
+}
+
+table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th {
+  text-align: left;
+  font-weight: 600;
+  border-bottom: var(--hairline);
+  padding: var(--space-3) var(--space-2);
+}
+
+td {
+  border-bottom: var(--hairline);
+  padding: var(--space-3) var(--space-2);
+}
+
+tbody tr {
+  transition: background-color var(--transition);
+}
+
+tbody tr:hover {
+  background: var(--muted);
+}
+
+/* ---- Motion is opt-out by definition; honour the preference anyway ----- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+  }
+}
